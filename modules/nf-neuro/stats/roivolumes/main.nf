@@ -20,6 +20,8 @@ process STATS_ROIVOLUMES {
     def suffix            = task.ext.first_suffix ? "${task.ext.first_suffix}_volumes" : "volumes"
     def use_label         = task.ext.use_label ? true : false
     def use_label_py      = use_label ? "True" : "False"
+    def mask_volume       = task.ext.mask_volume ?: "nonzero"
+    assert mask_volume in ["nonzero", "fraction"] : "ext.mask_volume must be 'nonzero' or 'fraction', not '${mask_volume}'"
     def substrs_to_remove = task.ext.key_substrs_to_remove ?: []
     def substrs_json      = groovy.json.JsonOutput.toJson(substrs_to_remove)
     // For labels mode: rois is a list; join paths as space-separated string for Python to split
@@ -38,6 +40,7 @@ prefix     = "${prefix}"
 suffix     = "${suffix}"
 use_label  = ${use_label_py}
 substrs    = ${substrs_json}
+mask_volume = "${mask_volume}"
 subject_id = "${subject_id}"
 session_id = "${session_id}"
 run_id     = "${run_id}"
@@ -65,10 +68,10 @@ if use_label:
             out.write(f"{subject_id},{session_id},{run_id},{label_name},{count},{vol_mm3:.4f}\\n")
 else:
     # Labels mode: list of binary/weighted ROI masks, one file per label.
-    # A mask with values in [0, 1] counts each voxel by its value: 1 per voxel for a binary mask,
-    # and the covered fraction for the border voxels of a binary mask warped with linear
-    # interpolation (counting those as whole voxels inflates thin structures by 40% or more).
-    # Other masks (soft maps such as track density) count every non-zero voxel once.
+    # ext.mask_volume = "nonzero" (default): every non-zero voxel counts once.
+    # ext.mask_volume = "fraction": each voxel counts by its value, which must lie in [0, 1]: the
+    # covered fraction of the border voxels of a binary mask warped with linear interpolation
+    # (counting those as whole voxels inflates thin structures by 40% or more).
     # NaN voxels are excluded.
     mask_files = sorted("${rois_str}".split())
 
@@ -86,7 +89,11 @@ else:
             img     = nib.load(mask_file)
             data    = np.nan_to_num(img.get_fdata(), nan=0.0)
             vox_vol = float(np.prod(img.header.get_zooms()[:3]))
-            if data.min() >= 0 and data.max() <= 1:
+            if mask_volume == "fraction":
+                if data.min() < 0 or data.max() > 1:
+                    raise SystemExit(f"ERROR: {mask_file} has values outside [0, 1] "
+                                     f"({data.min():g} to {data.max():g}); ext.mask_volume = 'fraction' "
+                                     "needs fractional masks, use 'nonzero' for other maps")
                 count = float(data.sum())
             else:
                 count = float(np.sum(data > 0))

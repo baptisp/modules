@@ -86,7 +86,7 @@ nextflow_process {
         }
     }
 
-    test("stats - roi volumes - labels mode - fractional mask counts its fraction") {
+    test("stats - roi volumes - labels mode - mask_volume fraction counts each voxel by its value") {
 
         // The IFGWM mask times 0.5: every voxel is half covered, as the border voxels of a binary
         // mask warped with linear interpolation. Its volume must be exactly half of the mask's.
@@ -129,6 +129,31 @@ nextflow_process {
                 { assert voxels.keySet() == ["IFGWM", "IFGWM_half"] as Set },
                 { assert voxels["IFGWM"] > 0 },
                 { assert Math.abs(voxels["IFGWM_half"] - voxels["IFGWM"] / 2) < 1e-3 }
+            )
+        }
+    }
+
+    test("stats - roi volumes - labels mode - mask_volume fraction rejects values above 1") {
+
+        config "./nextflow_fraction.config"
+
+        when {
+            process {
+                """
+                input[0] = LOAD_DATA.out.test_data_directory
+                    .filter { it.simpleName == "tractometry" }
+                    .map { test_data_directory -> [
+                        [ id:'test', single_end:false ],
+                        [ file("\${test_data_directory}/IFGWM_labels_map.nii.gz") ],
+                        []
+                    ] }
+                """
+            }
+        }
+        then {
+            assertAll(
+                { assert process.failed },
+                { assert process.stdout.any { l -> l.contains("values outside [0, 1]") } }
             )
         }
     }
