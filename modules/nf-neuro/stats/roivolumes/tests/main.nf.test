@@ -8,6 +8,7 @@ nextflow_process {
     tag "modules_nfneuro"
     tag "stats"
     tag "stats/roivolumes"
+    tag "image/math"
 
     tag "subworkflows"
     tag "subworkflows/load_test_data"
@@ -81,6 +82,53 @@ nextflow_process {
             assertAll(
                 { assert process.success },
                 { assert snapshot(process.out).match() }
+            )
+        }
+    }
+
+    test("stats - roi volumes - labels mode - fractional mask counts its fraction") {
+
+        // The IFGWM mask times 0.5: every voxel is half covered, as the border voxels of a binary
+        // mask warped with linear interpolation. Its volume must be exactly half of the mask's.
+        config "./nextflow_fraction.config"
+
+        setup {
+            run("IMAGE_MATH") {
+                script "../../../image/math/main.nf"
+                process {
+                    """
+                    input[0] = LOAD_DATA.out.test_data_directory
+                        .filter { it.simpleName == "tractometry" }
+                        .map { test_data_directory -> [
+                            [ id:'IFGWM' ], file("\${test_data_directory}/IFGWM.nii.gz"), 0.5
+                        ] }
+                    """
+                }
+            }
+        }
+
+        when {
+            process {
+                """
+                input[0] = LOAD_DATA.out.test_data_directory
+                    .filter { it.simpleName == "tractometry" }
+                    .combine(IMAGE_MATH.out.image)
+                    .map { test_data_directory, _meta, half -> [
+                        [ id:'test', single_end:false ],
+                        [ file("\${test_data_directory}/IFGWM.nii.gz"), half ],
+                        []
+                    ] }
+                """
+            }
+        }
+        then {
+            def rows = path(process.out.volumes[0][1]).readLines().drop(1).collect { l -> l.split(",", -1) }
+            def voxels = rows.collectEntries { r -> [ r[3], r[4] as double ] }
+            assertAll(
+                { assert process.success },
+                { assert voxels.keySet() == ["IFGWM", "IFGWM_half"] as Set },
+                { assert voxels["IFGWM"] > 0 },
+                { assert Math.abs(voxels["IFGWM_half"] - voxels["IFGWM"] / 2) < 1e-3 }
             )
         }
     }

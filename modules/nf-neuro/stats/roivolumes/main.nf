@@ -65,9 +65,11 @@ if use_label:
             out.write(f"{subject_id},{session_id},{run_id},{label_name},{count},{vol_mm3:.4f}\\n")
 else:
     # Labels mode: list of binary/weighted ROI masks, one file per label.
-    # Equivalent per mask to:
-    #   mrstats mask -mask mask -output count
-    # np.sum(data > 0) counts finite non-zero voxels (NaN > 0 == False, excluded).
+    # A mask with values in [0, 1] counts each voxel by its value: 1 per voxel for a binary mask,
+    # and the covered fraction for the border voxels of a binary mask warped with linear
+    # interpolation (counting those as whole voxels inflates thin structures by 40% or more).
+    # Other masks (soft maps such as track density) count every non-zero voxel once.
+    # NaN voxels are excluded.
     mask_files = sorted("${rois_str}".split())
 
     with open(output_file, 'w') as out:
@@ -82,11 +84,15 @@ else:
                 roi_name = roi_name.removeprefix(s).removesuffix(s)
 
             img     = nib.load(mask_file)
-            data    = img.get_fdata()
+            data    = np.nan_to_num(img.get_fdata(), nan=0.0)
             vox_vol = float(np.prod(img.header.get_zooms()[:3]))
-            count   = int(np.sum(data > 0))
+            if data.min() >= 0 and data.max() <= 1:
+                count = float(data.sum())
+            else:
+                count = float(np.sum(data > 0))
+            count_str = str(int(round(count))) if abs(count - round(count)) < 1e-6 else f"{count:.4f}"
             vol_mm3 = count * vox_vol
-            out.write(f"{subject_id},{session_id},{run_id},{roi_name},{count},{vol_mm3:.4f}\\n")
+            out.write(f"{subject_id},{session_id},{run_id},{roi_name},{count_str},{vol_mm3:.4f}\\n")
 
 with open("versions.yml", "w") as v:
     v.write('"${task.process}":\\n')
