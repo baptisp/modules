@@ -146,7 +146,8 @@ process STATS_METRICSINROI {
 
     # All ROIs have the same metrics. To get the metric names from
     # the JSON, we can just fetch them from the first ROI.
-    first_roi=\$(printf '%s\\n' \$roi_names | head -n 1)
+    # awk reads all its input: with head, printf can get SIGPIPE (exit 141 under pipefail)
+    first_roi=\$(printf '%s\\n' \$roi_names | awk 'NR == 1')
 
     # Extract the metric names from this first roi (renamed to avoid shadowing the input path variable)
     metric_names=\$(FIRST_ROI="\$first_roi" jq -r ".\\"\$first_roi\\" | keys[]" ${prefix}_${suffix}.json)
