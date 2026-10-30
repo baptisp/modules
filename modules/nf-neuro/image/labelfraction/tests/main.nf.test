@@ -1,0 +1,219 @@
+// Known-answer tests on the Brainnetome atlas of the plot test package (1 mm grid, 25 LUT labels).
+nextflow_process {
+
+    name "Test Process IMAGE_LABELFRACTION"
+    script "../main.nf"
+    process "IMAGE_LABELFRACTION"
+
+    tag "modules"
+    tag "modules_nfneuro"
+    tag "image"
+    tag "image/labelfraction"
+    tag "image/resample"
+    tag "image/math"
+
+    tag "subworkflows"
+    tag "subworkflows/load_test_data"
+
+    // Rows of the sums CSV as roi -> [acq_voxels, volume_mm3]
+    def sums = { f -> path(f).readLines().drop(1).collectEntries { l -> def r = l.split(",", -1); [ r[3], [ r[4] as double, r[5] as double ] ] } }
+
+    setup {
+        run("LOAD_TEST_DATA", alias: "LOAD_DATA") {
+            script "../../../../../subworkflows/nf-neuro/load_test_data/main.nf"
+            process {
+                """
+                input[0] = channel.from( [ "plot.zip" ] )
+                input[1] = "test.load-test-data"
+                """
+            }
+        }
+    }
+
+    test("image - labelfraction - acquisition grid of the labels: fractions are whole voxels") {
+
+        config "./nextflow.config"
+
+        when {
+            process {
+                """
+                // The FA grid as both acquisition and target grid, staged under two names
+                input[0] = LOAD_DATA.out.test_data_directory.map { d -> [
+                    [ id:'test', single_end:false ],
+                    file("\${d}/atlas_brainnetome.nii.gz"), file("\${d}/fa.nii.gz"),
+                    file("\${d}/fa.nii.gz").copyTo(file("\${d}/target_fa.nii.gz")),
+                    [], file("\${d}/atlas_brainnetome.json"), []
+                ] }
+                """
+            }
+        }
+        then {
+            def s = sums(process.out.sums[0][1])
+            assertAll(
+                { assert process.success },
+                // On the labels' own grid each region keeps its voxel count (3918, 3553, 3929), within
+                // the slight smoothing of GenericLabel at sub-voxel positions
+                { assert s.size() == 25 },
+                { assert Math.abs(s["lh_A8m"][0] - 3918) / 3918 < 0.01 },
+                { assert Math.abs(s["rh_A8m"][0] - 3553) / 3553 < 0.01 },
+                { assert Math.abs(s["lh_IFJ"][0] - 3929) / 3929 < 0.01 },
+                { assert process.out.fractions[0][1].size() == 25 },
+                { assert snapshot(
+                    process.out.sums,
+                    (process.out.fractions[0][1] instanceof List ? process.out.fractions[0][1] : [process.out.fractions[0][1]]).collect { f -> file(f.toString()).name },
+                    process.out.versions
+                ).match() }
+            )
+        }
+    }
+
+    test("image - labelfraction - 2 mm acquisition grid: fractions keep the label volumes") {
+
+        config "./nextflow.config"
+
+        setup {
+            run("IMAGE_RESAMPLE") {
+                script "../../resample/main.nf"
+                process {
+                    """
+                    input[0] = LOAD_DATA.out.test_data_directory.map { d -> [ [ id:'acq' ], file("\${d}/fa.nii.gz"), [] ] }
+                    """
+                }
+            }
+        }
+
+        when {
+            process {
+                """
+                input[0] = LOAD_DATA.out.test_data_directory
+                    .combine(IMAGE_RESAMPLE.out.image)
+                    .map { d, _meta, acq -> [
+                        [ id:'test', single_end:false ],
+                        file("\${d}/atlas_brainnetome.nii.gz"), acq, file("\${d}/fa.nii.gz"),
+                        [], file("\${d}/atlas_brainnetome.json"), []
+                    ] }
+                """
+            }
+        }
+        then {
+            def s = sums(process.out.sums[0][1])
+            assertAll(
+                { assert process.success },
+                // 8 mm3 acquired voxels: fractional voxel counts, but the volume of each label is kept
+                { assert Math.abs(s["lh_A8m"][1] - 3918) / 3918 < 0.01 },
+                { assert Math.abs(s["lh_IFJ"][1] - 3929) / 3929 < 0.01 },
+                { assert s.values().every { v -> Math.abs(v[0] * 8 - v[1]) < 0.01 } },
+                { assert snapshot(process.out.sums, process.out.versions).match() }
+            )
+        }
+    }
+
+    test("image - labelfraction - min_fraction gives binary masks") {
+
+        config "./nextflow_threshold.config"
+
+        setup {
+            run("IMAGE_RESAMPLE") {
+                script "../../resample/main.nf"
+                process {
+                    """
+                    input[0] = LOAD_DATA.out.test_data_directory.map { d -> [ [ id:'acq' ], file("\${d}/fa.nii.gz"), [] ] }
+                    """
+                }
+            }
+        }
+
+        when {
+            process {
+                """
+                input[0] = LOAD_DATA.out.test_data_directory
+                    .combine(IMAGE_RESAMPLE.out.image)
+                    .map { d, _meta, acq -> [
+                        [ id:'test', single_end:false ],
+                        file("\${d}/atlas_brainnetome.nii.gz"), acq, file("\${d}/fa.nii.gz"),
+                        [], file("\${d}/atlas_brainnetome.json"), []
+                    ] }
+                """
+            }
+        }
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() }
+            )
+        }
+    }
+
+    test("image - labelfraction - brain mask: no weight outside it, share inside reported") {
+
+        config "./nextflow_mask.config"
+
+        setup {
+            run("IMAGE_MATH") {
+                script "../../math/main.nf"
+                process {
+                    """
+                    // Brain mask on the atlas grid holding Brainnetome labels 13 and above
+                    input[0] = LOAD_DATA.out.test_data_directory.map { d -> [ [ id:'mask' ], file("\${d}/atlas_brainnetome.nii.gz"), 13 ] }
+                    """
+                }
+            }
+        }
+
+        when {
+            process {
+                """
+                input[0] = LOAD_DATA.out.test_data_directory
+                    .combine(IMAGE_MATH.out.image)
+                    .map { d, _meta, mask -> [
+                        [ id:'test', single_end:false ],
+                        file("\${d}/atlas_brainnetome.nii.gz"), file("\${d}/fa.nii.gz"),
+                        file("\${d}/fa.nii.gz").copyTo(file("\${d}/target_fa.nii.gz")),
+                        [], file("\${d}/atlas_brainnetome.json"), mask
+                    ] }
+                """
+            }
+        }
+        then {
+            def rows = path(process.out.sums[0][1]).readLines().drop(1).collectEntries { l -> def r = l.split(",", -1); [ r[3], r ] }
+            def maps = (process.out.fractions[0][1] instanceof List ? process.out.fractions[0][1] : [process.out.fractions[0][1]]).collect { f -> file(f.toString()).name }
+            assertAll(
+                { assert process.success },
+                // label 1 lies outside the mask, label 17 inside (up to the GenericLabel smoothing at borders)
+                { assert (rows["lh_A8m"][6] as double) < 0.05 },
+                { assert (rows["lh_IFJ"][6] as double) > 0.95 },
+                { assert "test__lh_IFJ_fraction.nii.gz" in maps },
+                { assert rows.values().every { r -> r[7] in ["0", "1"] } }
+            )
+        }
+    }
+
+    test("image - labelfraction - stub-run") {
+        tag "stub"
+        options "-stub-run"
+
+        config "./nextflow.config"
+
+        when {
+            process {
+                """
+                input[0] = channel.of([
+                    [ id:'test', single_end:false ],
+                    file('labels.nii.gz', checkIfExists: false), file('acq.nii.gz', checkIfExists: false),
+                    file('target.nii.gz', checkIfExists: false), [], file('lut.json', checkIfExists: false), []
+                ])
+                """
+            }
+        }
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(
+                    (process.out.fractions[0][1] instanceof List ? process.out.fractions[0][1] : [process.out.fractions[0][1]]).collect { f -> file(f.toString()).name },
+                    process.out.sums[0][1].toString().tokenize("/")[-1],
+                    process.out.versions
+                ).match() }
+            )
+        }
+    }
+}

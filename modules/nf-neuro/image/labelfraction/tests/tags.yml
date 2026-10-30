@@ -1,0 +1,2 @@
+image/labelfraction:
+  - "modules/nf-neuro/image/labelfraction/**"

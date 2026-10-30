@@ -1,0 +1,138 @@
+name: "image_labelfraction"
+description: |
+  Fraction of each acquired voxel that belongs to each label of a labelmap, written on the grid
+  of the metric maps, for partial-volume-weighted region statistics. Diffusion maps are often
+  resampled (e.g. to 1 mm) but hold the information of coarser acquired voxels (2 to 2.7 mm),
+  where partial volume happens. The labels are warped (GenericLabel) onto a copy of the
+  acquisition grid refined `supersampling` times per axis; per acquired voxel and label, the
+  fraction is the share of refined voxels holding that label; each voxel of the target grid
+  takes the fraction of the acquired voxel holding its centre. The maps can be given as weights
+  to stats/metricsinroi (masks mode) for fraction-weighted means.
+keywords:
+  - partial volume
+  - labels
+  - fraction
+  - roi
+  - weighted mean
+tools:
+  - ANTs:
+      description: Advanced Normalization Tools, used here for antsApplyTransforms.
+      homepage: https://github.com/ANTsX/ANTs
+      identifier: ""
+  - nibabel:
+      description: Python package for reading and writing neuroimaging file formats.
+      homepage: https://nipy.org/nibabel/
+      identifier: ""
+  - numpy:
+      description: Fundamental package for scientific computing with Python.
+      homepage: https://numpy.org/
+      identifier: ""
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. `[ id:'test', single_end:false ]`
+    - labels:
+        type: file
+        description: Labelmap (integer labels), in any space reached by `transforms`.
+        pattern: "*.{nii,nii.gz}"
+        ontologies:
+          - edam: http://edamontology.org/format_4001
+    - acq_reference:
+        type: file
+        description: |
+          Image on the acquisition grid, where partial volume happens (e.g. the raw DWI or its
+          b0, before resampling). Only its grid is used.
+        pattern: "*.{nii,nii.gz}"
+        ontologies:
+          - edam: http://edamontology.org/format_4001
+    - target_reference:
+        type: file
+        description: Image on the grid of the metric maps; the fraction maps are written on it.
+        pattern: "*.{nii,nii.gz}"
+        ontologies:
+          - edam: http://edamontology.org/format_4001
+    - transforms:
+        type: file
+        description: |
+          ANTs transforms from the labels to the acquisition space, in the order
+          antsApplyTransforms takes them. Pass [] when the labels are already in that space.
+        pattern: "*.{mat,nii,nii.gz,txt}"
+        mandatory: false
+        ontologies: []
+    - lut:
+        type: file
+        description: |
+          JSON Look-Up Table mapping integer label indices (as strings) to region names;
+          only these labels are reported. e.g. {"17": "Left-Hippocampus"}
+        pattern: "*.json"
+        ontologies:
+          - edam: http://edamontology.org/format_3464
+    - brain_mask:
+        type: file
+        description: |
+          Brain mask on the target grid (e.g. the DWI brain mask the metric maps were computed in).
+          The maps are 0 outside it, so the fraction maps get no weight there; otherwise those
+          zeros pull the region means down. Pass [] to keep every voxel.
+        pattern: "*.{nii,nii.gz}"
+        mandatory: false
+        ontologies:
+          - edam: http://edamontology.org/format_4001
+output:
+  fractions:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. `[ id:'test', single_end:false ]`
+      - "*__*_fraction.nii.gz":
+          type: file
+          description: |
+            One map per LUT label present, `{prefix}__{name}_fraction.nii.gz`, on the target
+            grid (float32): the fraction of the acquired voxel inside the label, or a binary mask
+            when `min_fraction` is above 0 (only labels with a voxel above it).
+          pattern: "*__*_fraction.nii.gz"
+          ontologies:
+            - edam: http://edamontology.org/format_4001
+  sums:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. `[ id:'test', single_end:false ]`
+      - "*_fraction_sums.csv":
+          type: file
+          description: |
+            `{prefix}_fraction_sums.csv` with columns sid, session, run, roi, acq_voxels (sum of
+            the fractions over the acquisition grid), volume_mm3 (acq_voxels × acquired voxel
+            volume), in_mask_fraction (share of the region's weight inside brain_mask; 1 without
+            a mask; empty for an absent region), small_region (1 when acq_voxels is below
+            small_region_voxels), one row per LUT entry.
+          pattern: "*_fraction_sums.csv"
+          ontologies:
+            - edam: http://edamontology.org/format_3752
+  versions:
+    - versions.yml:
+        type: file
+        description: File containing software versions
+        pattern: "versions.yml"
+        ontologies:
+          - edam: http://edamontology.org/format_3750
+authors:
+  - "@baptisp"
+args:
+  - supersampling:
+      type: integer
+      description: Refinement of the acquisition grid per axis to compute the fractions.
+      default: 4
+  - small_region_voxels:
+      type: number
+      description: Regions with fewer acquired voxels (acq_voxels) are flagged small_region = 1.
+      default: 50
+  - min_fraction:
+      type: number
+      description: |
+        0: fraction maps, for weighted means. Above 0: binary masks of the voxels at least that
+        much inside the label, for unweighted means (e.g. 0.75 for a sensitivity analysis).
+      default: 0

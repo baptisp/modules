@@ -1,0 +1,192 @@
+{
+    "image - labelfraction - 2 mm acquisition grid: fractions keep the label volumes": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "test",
+                        "single_end": false
+                    },
+                    "test_fraction_sums.csv:md5,76bafc9e41bb7b5d540e228b846090a1"
+                ]
+            ],
+            [
+                "versions.yml:md5,da06f626a0dc9d51530d229929254943"
+            ]
+        ],
+        "timestamp": "2026-10-29T20:02:05.094178541",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.0"
+        }
+    },
+    "image - labelfraction - stub-run": {
+        "content": [
+            [
+                "test__Left-Hippocampus_fraction.nii.gz"
+            ],
+            "test_fraction_sums.csv",
+            [
+                "versions.yml:md5,6c85bf3f54a9bfbdf0445341fd478b07"
+            ]
+        ],
+        "timestamp": "2026-10-29T20:06:49.827295629",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.0"
+        }
+    },
+    "image - labelfraction - acquisition grid of the labels: fractions are whole voxels": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "test",
+                        "single_end": false
+                    },
+                    "test_fraction_sums.csv:md5,1b11bbb08a9995f8c3b8db09f6a96905"
+                ]
+            ],
+            [
+                "test__lh_A10m_fraction.nii.gz",
+                "test__lh_A46_fraction.nii.gz",
+                "test__lh_A6dl_fraction.nii.gz",
+                "test__lh_A6m_fraction.nii.gz",
+                "test__lh_A6vl_fraction.nii.gz",
+                "test__lh_A8dl_fraction.nii.gz",
+                "test__lh_A8m_fraction.nii.gz",
+                "test__lh_A8vl_fraction.nii.gz",
+                "test__lh_A9_46d_fraction.nii.gz",
+                "test__lh_A9_46v_fraction.nii.gz",
+                "test__lh_A9l_fraction.nii.gz",
+                "test__lh_A9m_fraction.nii.gz",
+                "test__lh_IFJ_fraction.nii.gz",
+                "test__rh_A10m_fraction.nii.gz",
+                "test__rh_A46_fraction.nii.gz",
+                "test__rh_A6dl_fraction.nii.gz",
+                "test__rh_A6m_fraction.nii.gz",
+                "test__rh_A8dl_fraction.nii.gz",
+                "test__rh_A8m_fraction.nii.gz",
+                "test__rh_A8vl_fraction.nii.gz",
+                "test__rh_A9_46d_fraction.nii.gz",
+                "test__rh_A9_46v_fraction.nii.gz",
+                "test__rh_A9l_fraction.nii.gz",
+                "test__rh_A9m_fraction.nii.gz",
+                "test__rh_IFJ_fraction.nii.gz"
+            ],
+            [
+                "versions.yml:md5,da06f626a0dc9d51530d229929254943"
+            ]
+        ],
+        "timestamp": "2026-10-29T20:01:27.507077813",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.0"
+        }
+    },
+    "image - labelfraction - min_fraction gives binary masks": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        [
+                            "test__lh_A10m_fraction.nii.gz:md5,4db6b92aa16750de9972c8baab9cddc3",
+                            "test__lh_A46_fraction.nii.gz:md5,079dd305809dbd1c2579c11913958167",
+                            "test__lh_A6dl_fraction.nii.gz:md5,876b3b0b93ff7b2ee79fe78aab9c3d5c",
+                            "test__lh_A6m_fraction.nii.gz:md5,3143da2be389418e8ad7023a8d2eb0ba",
+                            "test__lh_A6vl_fraction.nii.gz:md5,e5af3328239b45da513e5b8d01361a7d",
+                            "test__lh_A8dl_fraction.nii.gz:md5,51c24af6d027d6d63ea1cb33a8827bfd",
+                            "test__lh_A8m_fraction.nii.gz:md5,bc38445f3f7d0e83f389093fd68bdb5f",
+                            "test__lh_A8vl_fraction.nii.gz:md5,f746c6d7a30e114012a15970ab641e4b",
+                            "test__lh_A9_46d_fraction.nii.gz:md5,117fb6de3bb27b712860f26b1d98ad69",
+                            "test__lh_A9_46v_fraction.nii.gz:md5,d5c9570cbc7823852b9f7c4a2461b254",
+                            "test__lh_A9l_fraction.nii.gz:md5,14a474768e2527603341d4642edaef15",
+                            "test__lh_A9m_fraction.nii.gz:md5,02fc11ddf511a53d7f7bcbd7103cf446",
+                            "test__lh_IFJ_fraction.nii.gz:md5,159b213769e40ebefa17205ac35715ab",
+                            "test__rh_A10m_fraction.nii.gz:md5,f5e578107d055e4dbd5c5d6e25f991ef",
+                            "test__rh_A46_fraction.nii.gz:md5,e30bb13b64ea87b964386f75de60720e",
+                            "test__rh_A6dl_fraction.nii.gz:md5,4231784a993b5c00533f871621d2a28e",
+                            "test__rh_A6m_fraction.nii.gz:md5,43f39fd3d5c29357e02e9913a3a41c7a",
+                            "test__rh_A8dl_fraction.nii.gz:md5,b62c361369b02b3696174ca7b5b43423",
+                            "test__rh_A8m_fraction.nii.gz:md5,1683cea9888abe155c6d092845e85485",
+                            "test__rh_A8vl_fraction.nii.gz:md5,02c7acd765cd7bea0e4dd3c9135e4d15",
+                            "test__rh_A9_46d_fraction.nii.gz:md5,5fb8c7ca1b08bcbfe8b6b4a0355e2cf9",
+                            "test__rh_A9_46v_fraction.nii.gz:md5,4fa3b74be3395346a35c66eda27cb87c",
+                            "test__rh_A9l_fraction.nii.gz:md5,45250a9c7c44e43242ec80b8738186db",
+                            "test__rh_A9m_fraction.nii.gz:md5,0386714d0ba9b70c3f5e2df71f3d5683",
+                            "test__rh_IFJ_fraction.nii.gz:md5,628e9674245b947fc0c1c01ac3a25cdf"
+                        ]
+                    ]
+                ],
+                "1": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test_fraction_sums.csv:md5,76bafc9e41bb7b5d540e228b846090a1"
+                    ]
+                ],
+                "2": [
+                    "versions.yml:md5,da06f626a0dc9d51530d229929254943"
+                ],
+                "fractions": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        [
+                            "test__lh_A10m_fraction.nii.gz:md5,4db6b92aa16750de9972c8baab9cddc3",
+                            "test__lh_A46_fraction.nii.gz:md5,079dd305809dbd1c2579c11913958167",
+                            "test__lh_A6dl_fraction.nii.gz:md5,876b3b0b93ff7b2ee79fe78aab9c3d5c",
+                            "test__lh_A6m_fraction.nii.gz:md5,3143da2be389418e8ad7023a8d2eb0ba",
+                            "test__lh_A6vl_fraction.nii.gz:md5,e5af3328239b45da513e5b8d01361a7d",
+                            "test__lh_A8dl_fraction.nii.gz:md5,51c24af6d027d6d63ea1cb33a8827bfd",
+                            "test__lh_A8m_fraction.nii.gz:md5,bc38445f3f7d0e83f389093fd68bdb5f",
+                            "test__lh_A8vl_fraction.nii.gz:md5,f746c6d7a30e114012a15970ab641e4b",
+                            "test__lh_A9_46d_fraction.nii.gz:md5,117fb6de3bb27b712860f26b1d98ad69",
+                            "test__lh_A9_46v_fraction.nii.gz:md5,d5c9570cbc7823852b9f7c4a2461b254",
+                            "test__lh_A9l_fraction.nii.gz:md5,14a474768e2527603341d4642edaef15",
+                            "test__lh_A9m_fraction.nii.gz:md5,02fc11ddf511a53d7f7bcbd7103cf446",
+                            "test__lh_IFJ_fraction.nii.gz:md5,159b213769e40ebefa17205ac35715ab",
+                            "test__rh_A10m_fraction.nii.gz:md5,f5e578107d055e4dbd5c5d6e25f991ef",
+                            "test__rh_A46_fraction.nii.gz:md5,e30bb13b64ea87b964386f75de60720e",
+                            "test__rh_A6dl_fraction.nii.gz:md5,4231784a993b5c00533f871621d2a28e",
+                            "test__rh_A6m_fraction.nii.gz:md5,43f39fd3d5c29357e02e9913a3a41c7a",
+                            "test__rh_A8dl_fraction.nii.gz:md5,b62c361369b02b3696174ca7b5b43423",
+                            "test__rh_A8m_fraction.nii.gz:md5,1683cea9888abe155c6d092845e85485",
+                            "test__rh_A8vl_fraction.nii.gz:md5,02c7acd765cd7bea0e4dd3c9135e4d15",
+                            "test__rh_A9_46d_fraction.nii.gz:md5,5fb8c7ca1b08bcbfe8b6b4a0355e2cf9",
+                            "test__rh_A9_46v_fraction.nii.gz:md5,4fa3b74be3395346a35c66eda27cb87c",
+                            "test__rh_A9l_fraction.nii.gz:md5,45250a9c7c44e43242ec80b8738186db",
+                            "test__rh_A9m_fraction.nii.gz:md5,0386714d0ba9b70c3f5e2df71f3d5683",
+                            "test__rh_IFJ_fraction.nii.gz:md5,628e9674245b947fc0c1c01ac3a25cdf"
+                        ]
+                    ]
+                ],
+                "sums": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test_fraction_sums.csv:md5,76bafc9e41bb7b5d540e228b846090a1"
+                    ]
+                ],
+                "versions": [
+                    "versions.yml:md5,da06f626a0dc9d51530d229929254943"
+                ]
+            }
+        ],
+        "timestamp": "2026-10-29T20:02:42.24955897",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.0"
+        }
+    }
+}
